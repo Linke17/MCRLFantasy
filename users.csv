@@ -1,2 +1,3 @@
-username,password
-Test1,Pass1
+username,password,role
+admin,admin123,admin
+test1,pass1,user
