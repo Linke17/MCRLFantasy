@@ -1,14 +1,83 @@
 from typing import List
+import numpy as np
 import random
 
 
 class Player:
-    def __init__(self, id: str, name: str):
+    def __init__(self, id: str, name: str, shots: List[int] = [], goals: List[int] = [], assists: List[int] = [], saves: List[int] = [], score: List[int] = []):
         self.id = id
         self.name = name
+        self.shots = shots
+        self.goals = goals
+        self.assists = assists
+        self.saves = saves
+        self.score = score
+
+    def add_stats(self, average_core: dict) -> None:
+        self.shots.append(average_core['shots'])
+        self.goals.append(average_core['goals'])
+        self.assists.append(average_core['assists'])
+        self.saves.append(average_core['saves'])
+        self.score.append(average_core['score'])
+
+    def get_week(self, week: int) -> dict:
+        return {
+            'shots': self.shots[week],
+            'goals': self.goals[week],
+            'assists': self.assists[week],
+            'saves': self.saves[week],
+            'score': self.score[week]
+        }
+
+    def get_average_stats(self) -> dict:
+        average_stats = {
+            'id': self.id,
+            'name': self.name,
+            'shots': np.mean(self.shots),
+            'goals': np.mean(self.goals),
+            'assists': np.mean(self.assists),
+            'saves': np.mean(self.saves),
+            'game_score': np.mean(self.score),
+        }
+        average_stats['fantasy_score'] = self.calculate_fantasy_score(average_stats)
+
+        return average_stats
+    
+    def calculate_fantasy_score(self, stats: dict, position: str = '') -> float:
+        POSITION_MULTIPLIER = 1.5
+        FANTASY_POINTS = {
+            'goals': 50,
+            'assists': 25,
+            'saves': 25,
+            'shots': 15,
+            'game_score': 1
+        }
+
+        total_score = 0
+        for stat, value in FANTASY_POINTS.items():
+            if position == 'striker' and stat == 'goals':
+                total_score += value * stats[stat] * POSITION_MULTIPLIER
+            elif position == 'midfielder' and stat == 'assists':
+                total_score += value * stats[stat] * POSITION_MULTIPLIER
+            elif position == 'goalie' and stat == 'saves':
+                total_score += value * stats[stat] * POSITION_MULTIPLIER
+            else:
+                total_score += value * stats[stat]
+        return total_score
 
     def __str__(self) -> str:
         return self.name
+    
+    def __dict__(self) -> dict:
+        return {
+            'id': self.id,
+            'name': self.name,
+            'shots': self.shots,
+            'goals': self.goals,
+            'assists': self.assists,
+            'saves': self.saves,
+            'score': self.score
+        }
 
 
 class Team:
